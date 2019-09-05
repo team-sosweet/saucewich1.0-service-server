@@ -4,7 +4,7 @@
   "description": "soucewich auth server with JWT",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/app"
   },
   "repository": {
     "type": "git",
@@ -19,6 +19,8 @@
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^8.1.0",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "mysql2": "^1.7.0",
+    "sequelize": "^5.18.1"
   }
 }
