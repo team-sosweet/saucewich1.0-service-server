@@ -5,7 +5,7 @@ module.exports = (sequelize, DataTypes) => {
             primaryKey: true,
         },
         password: {
-            type: DataTypes.CHAR(128),
+            type: DataTypes.STRING,
             allowNull: false,
         },
         level: {
@@ -37,6 +37,14 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.TIME,
             allowNull: true,
             defaultValue: '00:00:00',
+        },
+        refreshToken: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        salt: {
+            type: DataTypes.STRING,
+            allowNull: true,
         }
     }, {
         timestamps: false,
