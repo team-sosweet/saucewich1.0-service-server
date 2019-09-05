@@ -1,9 +1,11 @@
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config({path: '.env'});
+require('dotenv').config();
+
+const sequelize = require('./models').sequelize;
+sequelize.sync();
 
 const app = express();
-
 app.set('port', process.env.PORT || 5000);
 
 app.use(cors());
