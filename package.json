@@ -22,5 +22,8 @@
     "express": "^4.17.1",
     "mysql2": "^1.7.0",
     "sequelize": "^5.18.1"
+  },
+  "devDependencies": {
+    "jsonwebtoken": "^8.5.1"
   }
 }
