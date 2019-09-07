@@ -1,4 +1,5 @@
 const express = require('express');
+const morgan = require('morgan');
 const cors = require('cors');
 require('dotenv').config();
 
@@ -10,6 +11,7 @@ const app = express();
 app.set('port', process.env.PORT || 5000);
 
 app.use(cors());
+app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
@@ -23,10 +25,11 @@ app.use((req, res, next) => {
 });
 
 // error handler
-app.use((err, req, res) => {
-    res.locals.message = err.message;
-    res.locals.error = req.app.get('env') === 'development' ? err : {};
-    res.status(err.status || 500);
+app.use((err, req, res, next) => {
+    res.status(err.status || 500).json({
+        success: false,
+        message: err.message,
+    });
 });
 
 // server listening
