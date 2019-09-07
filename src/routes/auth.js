@@ -34,8 +34,8 @@ router.post('/sign_in', async (req, res, next) => {
         });
         crypto.pbkdf2(body.password, user.salt, 10000, 64, 'sha512', async (err, key) => {
             if (user.password === key.toString('base64')) {
-                const AccessToken = jwt.sign({id: user.id, type: 'access'}, process.env.JWT_SECRET);
-                const RefreshToken = jwt.sign({id: user.id, type: 'refresh'}, process.env.JWT_SECRET);
+                const AccessToken = jwt.sign({id: user.id, type: 'access'}, process.env.JWT_SECRET, {expiresIn: '12h'});
+                const RefreshToken = jwt.sign({id: user.id, type: 'refresh'}, process.env.JWT_SECRET, {expiresIn: '14 days'});
 
                 await User.update({refreshToken: RefreshToken}, {where: {id: user.id}});
 
@@ -82,8 +82,8 @@ router.get('/refresh', async (req, res, next)=> {
                where: {id: decoded.id}
            });
            if(refreshToken === token) {
-               const AccessToken = jwt.sign({id: id, type: 'access'}, process.env.JWT_SECRET);
-               const RefreshToken = jwt.sign({id: id, type: 'refresh'}, process.env.JWT_SECRET);
+               const AccessToken = jwt.sign({id: id, type: 'access'}, process.env.JWT_SECRET, {expiresIn: '12h'});
+               const RefreshToken = jwt.sign({id: id, type: 'refresh'}, process.env.JWT_SECRET, {expiresIn: '14 days'});
 
                await User.update({refreshToken: RefreshToken}, {where: {id: id}});
 
@@ -93,8 +93,8 @@ router.get('/refresh', async (req, res, next)=> {
                    RefreshToken: RefreshToken,
                });
            } else {
-               let err = new Error('Invalid Token');
-               err.status=400;
+               let err = new Error('refresh_ttl_finished');
+               err.status=401;
                next(err);
            }
        } else {
