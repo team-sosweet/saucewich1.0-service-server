@@ -7,16 +7,21 @@ const router = express.Router();
 
 router.post('/sign_up', (req, res, next) => {
     let body = req.body;
-
     crypto.randomBytes(64, (err, salt) => {
         crypto.pbkdf2(body.password, salt.toString('base64'), 10000, 64, 'sha512', async function (err, key) {
-            let user = await User.create({
-                id: body.id,
-                password: key.toString('base64'),
-                salt: salt.toString('base64'),
-            });
+            try {
+                let user = await User.create({
+                    id: body.id,
+                    password: key.toString('base64'),
+                    salt: salt.toString('base64'),
+                });
 
-            if (user) res.json({success: true, message: "sign up success."});
+                if (user) res.json({success: true, message: "sign up success."});
+            } catch (error) {
+                let err = new Error('Conflict : User already exist.');
+                err.status = 409;
+                next(err);
+            }
         })
     });
 });
@@ -29,8 +34,8 @@ router.post('/sign_in', async (req, res, next) => {
         });
         crypto.pbkdf2(body.password, user.salt, 10000, 64, 'sha512', async (err, key) => {
             if (user.password === key.toString('base64')) {
-                const AccessToken = jwt.sign(user.id, process.env.JWT_SECRET);
-                const RefreshToken = jwt.sign(user.id, process.env.JWT_SECRET);
+                const AccessToken = jwt.sign({id: user.id, type: 'access'}, process.env.JWT_SECRET);
+                const RefreshToken = jwt.sign({id: user.id, type: 'refresh'}, process.env.JWT_SECRET);
 
                 await User.update({refreshToken: RefreshToken}, {where: {id: user.id}});
 
@@ -43,6 +48,7 @@ router.post('/sign_in', async (req, res, next) => {
                     WL = 0;
 
                 res.status(201).json({
+                    success: true,
                     user: {
                         id: user.id,
                         level: user.level,
@@ -65,6 +71,40 @@ router.post('/sign_in', async (req, res, next) => {
         err.status = 401;
         next(err);
     }
+});
+
+router.get('/refresh', async (req, res, next)=> {
+   const token = req.get(`X-Refresh-Token`);
+   const decoded = jwt.verify(token, process.env.JWT_SECRET);
+   try{
+       if(decoded.type === 'refresh') {
+           const { refreshToken, id } = await User.findOne({
+               where: {id: decoded.id}
+           });
+           if(refreshToken === token) {
+               const AccessToken = jwt.sign({id: id, type: 'access'}, process.env.JWT_SECRET);
+               const RefreshToken = jwt.sign({id: id, type: 'refresh'}, process.env.JWT_SECRET);
+
+               await User.update({refreshToken: RefreshToken}, {where: {id: id}});
+
+               res.status(201).json({
+                   success: true,
+                   AccessToken: AccessToken,
+                   RefreshToken: RefreshToken,
+               });
+           } else {
+               let err = new Error('Invalid Token');
+               err.status=400;
+               next(err);
+           }
+       } else {
+           let err = new Error('Invalid Token');
+           err.status=400;
+           next(err);
+       }
+   } catch (error) {
+       next(error);
+   }
 });
 
 module.exports = router;
