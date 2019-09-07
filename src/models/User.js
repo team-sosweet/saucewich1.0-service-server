@@ -23,6 +23,11 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true,
             defaultValue: 0,
         },
+        death : {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            defaultValue: 0,
+        },
         win: {
             type: DataTypes.INTEGER,
             allowNull: true,
