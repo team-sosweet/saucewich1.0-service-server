@@ -35,7 +35,11 @@ router.get('/join/:code', async (req, res, next) => {
         res.json();
     }
     let result = await redisClient.hmset(roomCode, {people:Number(people)+1});
-    res.json(result);
+    res.status(200).json({
+        success: true,
+        roomCode: roomCode,
+        people: Number(people)+1,
+    });
 });
 
 router.patch('/exit/:code', async (req, res, next) => {
