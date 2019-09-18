@@ -53,7 +53,7 @@ router.post('/sign_in', async (req, res, next) => {
                         id: user.id,
                         level: user.level,
                         exp: user.exp,
-                        playTime: user.playTime,
+                        playtime: user.playtime,
                         KD: KD.toFixed(2),
                         WL: WL.toFixed(2),
                     },
