@@ -23,23 +23,28 @@ router.post('/', async (req, res, next) => {
 
 router.get('/join/:code', async (req, res, next) => {
     let roomList = await getAllKeys();
+    console.log(roomList);
     let roomCode = req.params.code;
     if((roomList.indexOf(roomCode)) === -1) {
-        //error 처리
-        res.json();
+        let err = new Error('cannot found room with roomCode');
+        err.status = 406;
+        next(err);
+    } else {
+        let people = await getValue(roomCode, 'people');
+        console.log(Number(people));
+        if(people >= 6) {
+            let err = new Error('room is full');
+            err.status = 403;
+            next(err);
+        } else {
+            let result = await redisClient.hmset(roomCode, {people:Number(people)+1});
+            res.status(200).json({
+                success: true,
+                roomCode: roomCode,
+                people: Number(people)+1,
+            });
+        }
     }
-    let people = await getValue(roomCode, 'people');
-    console.log(Number(people));
-    if(people >= 6) {
-        //error 처리
-        res.json();
-    }
-    let result = await redisClient.hmset(roomCode, {people:Number(people)+1});
-    res.status(200).json({
-        success: true,
-        roomCode: roomCode,
-        people: Number(people)+1,
-    });
 });
 
 router.patch('/exit/:code', async (req, res, next) => {
