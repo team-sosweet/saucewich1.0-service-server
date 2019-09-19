@@ -1,29 +1,35 @@
 const express = require('express');
 const redisClient = require('../models/redisClient');
-const { getAllKeys, getAllData, getValue, deleteKey, newRoomCode } = require('./util');
+const { getAllKeys, getAllData, getAllGame, getValue, deleteKey, newRoomCode, getPeople } = require('./util');
 
 let router = express.Router();
 
 router.post('/', async (req, res, next) => {
-    let roomList = await getAllKeys();
+    let roomList = await getAllGame('people');
     let allow = false;
     let roomCode = '';
     while(allow === false) {
         roomCode = newRoomCode(3);
-        console.log('roomCode : '+roomCode);
         console.log(roomList);
         if((roomList.indexOf(roomCode)) === -1) {
             allow = true;
         }
     }
-    let people = await redisClient.hmset(roomCode, {people:0});
-    let result = await getAllData(roomCode);
-    if(result) res.json({roomCode:roomCode, info:result});
+    await redisClient.zadd("people", 0, roomCode);
+    let result = await getPeople('people', roomCode);
+    if(result) res.json({roomCode:roomCode, people:result[0][0]});
+});
+
+router.get('/join/rand', async (req, res, next) => {
+    let roomList = await getAllKeys();
+    let allow = false;
+    //while(allow === false) {
+        redisClient.sort();
+    //}
 });
 
 router.get('/join/:code', async (req, res, next) => {
     let roomList = await getAllKeys();
-    console.log(roomList);
     let roomCode = req.params.code;
     if((roomList.indexOf(roomCode)) === -1) {
         let err = new Error('cannot found room with roomCode');
