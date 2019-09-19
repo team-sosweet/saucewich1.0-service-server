@@ -1,4 +1,5 @@
 const redisClient = require('../models/redisClient');
+const jwt = require('jsonwebtoken');
 
 exports.getAllKeys = function() {
     return new Promise(((resolve, reject) => {
@@ -61,7 +62,7 @@ exports.changePeople = function (key, roomCode, people) {
             }
         });
     }))
-}
+};
 
 exports.getWaitGame = function (key, people) {
     return new Promise((resolve, reject) => {
@@ -108,10 +109,23 @@ exports.newRoomCode = function (length) {
     return result;
 };
 
-exports.levelCheck = function (level, exp) {
+exports.maxExp = function (level) {
     let max_exp = 0;
-    if(level === 1) max_exp = 1000;
+    if(Number(level) === 1) max_exp = 1000;
     else {
-        max_exp = 1000 * (1.5 ** level)
+        max_exp = Math.floor(1000 * (1.5 ** (Number(level)-1)));
+    }
+    return max_exp;
+};
+
+exports.checkJWT = function (req, res, next) {
+    const token = req.get(`X-Access-Token`);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if(req.body.id === decoded.id) {
+        next();
+    } else {
+        let err = new Error('user authentication fail');
+        err.status = 401;
+        next(err);
     }
 };
