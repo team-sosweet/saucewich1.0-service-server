@@ -53,7 +53,7 @@ router.get('/join/:code', async (req, res, next) => {
     }
 });
 
-router.patch('/exit/:code', async (req, res, next) => {
+router.put('/exit/:code', async (req, res, next) => {
    let roomList = await getAllKeys();
    let roomCode = req.params.code;
     if((roomList.indexOf(roomCode)) === -1) {
