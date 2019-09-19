@@ -143,6 +143,12 @@ exports.addPlaytime = function (source, target) {
     if(second < 10) {
         second = '0'+second.toString();
     }
+    if(minute < 10) {
+        minute = '0'+minute.toString();
+    }
+    if(hour < 10) {
+        hour = '0'+hour.toString();
+    }
     if(minute >= 60) {
         minute -= 60;
         hour ++;
