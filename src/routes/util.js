@@ -129,3 +129,23 @@ exports.checkJWT = function (req, res, next) {
         next(err);
     }
 };
+
+exports.addPlaytime = function (source, target) {
+    let sourceTime = source.split(':');
+    let targetTime = target.split(':');
+    let second = Number(sourceTime[2]) + Number(targetTime[2]);
+    let minute = Number(sourceTime[1]) + Number(targetTime[1]);
+    let hour = Number(sourceTime[0]) + Number(targetTime[0]);
+    if(second >= 60) {
+        second -= 60;
+        minute ++;
+    }
+    if(second < 10) {
+        second = '0'+second.toString();
+    }
+    if(minute >= 60) {
+        minute -= 60;
+        hour ++;
+    }
+    return hour.toString() + ':' + minute.toString() + ':' + second.toString();
+};
