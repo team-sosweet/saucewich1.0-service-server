@@ -51,6 +51,18 @@ exports.getPeople = function (key, roomCode) {
     })
 };
 
+exports.changePeople = function (key, roomCode, people) {
+    return new Promise(((resolve, reject) => {
+        redisClient.zincrby(key, people, roomCode, (err, data) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(data);
+            }
+        });
+    }))
+}
+
 exports.getWaitGame = function (key, people) {
     return new Promise((resolve, reject) => {
         redisClient.zrevrangebyscore(key, people, people, (err, data)=>{
