@@ -1,6 +1,6 @@
 const express = require('express');
 const redisClient = require('../models/redisClient');
-const { getAllKeys, getWaitGame, getAllGame, getAllData, changePeople, getValue, deleteKey, newRoomCode, getPeople } = require('./util');
+const { getWaitGame, getAllGame, getAllData, changePeople, newRoomCode, getPeople } = require('./util');
 
 let router = express.Router();
 
@@ -45,7 +45,7 @@ router.get('/join/:code', async (req, res, next) => {
             err.status = 403;
             next(err);
         } else {
-            let result = await changePeople('people', roomCode, 1);
+            await changePeople('people', roomCode, 1);
             res.status(200).json({
                 success: true,
                 roomCode: roomCode,
@@ -71,7 +71,7 @@ router.put('/exit/:code', async (req, res, next) => {
         next(err);
     } else {
         console.log(people);
-        let result = await changePeople('people', roomCode, -1);
+        await changePeople('people', roomCode, -1);
         res.status(200).json({success: true});
     }
 });
