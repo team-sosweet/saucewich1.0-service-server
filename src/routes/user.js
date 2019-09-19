@@ -5,7 +5,7 @@ const {maxExp, checkJWT, addPlaytime} = require('./util');
 const router = experss.Router();
 
 router.put('/info', checkJWT, async (req, res, next) => {
-    if(!req.body.exp || !req.body.kill || !req.body.death || !req.body.win || !req.body.lose || !req.body.playtime ||!req.body.id) {
+    if(!req.body.exp || !req.body.kill || !req.body.death || !req.body.win || !req.body.playtime ||!req.body.id) {
         let err = new Error('Need user info');
         err.status = 403;
         next(err);
@@ -32,8 +32,14 @@ router.put('/info', checkJWT, async (req, res, next) => {
         let kill = Number(user.kill) + Number(req.body.kill);
         let death = Number(user.death) + Number(req.body.death);
         let playtime = addPlaytime(user.playtime, req.body.playtime);
-        let win = Number(user.win) + Number(req.body.win);
-        let lose = Number(user.lose) + Number(req.body.lose);
+        let win = 0, lose = 0;
+        if(Number(req.body.win) === 1) {
+            win = Number(user.win) + 1;
+            lose = user.lose;
+        } else {
+            lose = Number(user.lose) + 1;
+            win = user.win;
+        }
         await User.update({
             level: level,
             exp: remainExp,
