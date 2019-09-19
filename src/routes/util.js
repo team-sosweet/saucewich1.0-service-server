@@ -13,9 +13,18 @@ exports.getAllKeys = function() {
 };
 
 exports.getAllData = function(key) {
+    // return new Promise((resolve, reject) => {
+    //     redisClient.hgetall(key, (err, data) => {
+    //         if(err) {
+    //             reject(err);
+    //         } else {
+    //             resolve(data);
+    //         }
+    //     })
+    // })
     return new Promise((resolve, reject) => {
-        redisClient.hgetall(key, (err, data) => {
-            if(err) {
+        redisClient.zrevrange(key, 0, -1, "withscores", (err, data) => {
+            if (err) {
                 reject(err);
             } else {
                 resolve(data);
@@ -23,6 +32,39 @@ exports.getAllData = function(key) {
         })
     })
 };
+
+exports.getAllGame = function(key) {
+    // return new Promise((resolve, reject) => {
+    //     redisClient.hgetall(key, (err, data) => {
+    //         if(err) {
+    //             reject(err);
+    //         } else {
+    //             resolve(data);
+    //         }
+    //     })
+    // })
+    return new Promise((resolve, reject) => {
+        redisClient.zrevrange(key, 0, -1, (err, data) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(data);
+            }
+        })
+    })
+};
+
+exports.getPeople = function (key, roomCode) {
+    return new Promise((resolve, reject) => {
+        redisClient.zscan(key, 0, 'MATCH', roomCode, (err, data) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(data);
+            }
+        })
+    })
+}
 
 exports.getValue = function (key, field) {
     return new Promise(((resolve, reject) => {
@@ -55,4 +97,12 @@ exports.newRoomCode = function (length) {
         result += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     return result;
+};
+
+exports.levelCheck = function (level, exp) {
+    let max_exp = 0;
+    if(level === 1) max_exp = 1000;
+    else {
+        max_exp = 1000 * (1.5 ** level)
+    }
 };
