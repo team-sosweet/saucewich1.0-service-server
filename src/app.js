@@ -7,6 +7,7 @@ const sequelize = require('./models').sequelize;
 sequelize.sync();
 const authRouter = require('./routes/auth');
 const roomRouter = require('./routes/room');
+const userRouter = require('./routes/user');
 
 const app = express();
 app.set('port', process.env.PORT || 5000);
@@ -18,6 +19,7 @@ app.use(express.urlencoded({extended: true}));
 
 app.use('/auth', authRouter);
 app.use('/room', roomRouter);
+app.use('/user', userRouter);
 
 // don't match any router
 app.use((req, res, next) => {
