@@ -32,7 +32,6 @@ router.get('/join/rand', async (req, res, next) => {
 
 router.get('/join/:code', async (req, res, next) => {
     let roomList = await getAllGame('people');
-    console.log(roomList);
     let roomCode = req.params.code;
     if((roomList.indexOf(roomCode)) === -1) {
         let err = new Error('cannot found room with roomCode');
@@ -46,7 +45,7 @@ router.get('/join/:code', async (req, res, next) => {
             err.status = 403;
             next(err);
         } else {
-            let result = await changePeople('people', roomCode, people);
+            let result = await changePeople('people', roomCode, 1);
             res.status(200).json({
                 success: true,
                 roomCode: roomCode,
@@ -57,24 +56,28 @@ router.get('/join/:code', async (req, res, next) => {
 });
 
 router.put('/exit/:code', async (req, res, next) => {
-   let roomList = await getAllKeys();
+   let roomList = await getAllGame('people');
    let roomCode = req.params.code;
     if((roomList.indexOf(roomCode)) === -1) {
-        //error 처리
-        res.json('test');
+        let err = new Error('cannot found room with roomCode');
+        err.status = 406;
+        next(err);
     }
-    let people = await getValue(roomCode, 'people');
-    if(people <= 1) {
-        let result = await deleteKey(roomCode);
-        if(result) res.status(200).json({success: true, message: '방에 인원이 없어 제거되었습니다.'});
+    let people = await getPeople('people', roomCode);
+    people = Number(people[1][1]) - 1;
+    if(people < 0) {
+        let err = new Error('cannot exit room');
+        err.status = 403;
+        next(err);
     } else {
-        let result = await redisClient.hmset(roomCode, {people:Number(people)-1});
-        res.json(result);
+        console.log(people);
+        let result = await changePeople('people', roomCode, -1);
+        res.status(200).json({success: true});
     }
 });
 
 router.get('/keys', async (req, res, next)=>{
-    let roomList = await getAllKeys();
+    let roomList = await getAllData('people');
     res.json(roomList);
 });
 
