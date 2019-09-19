@@ -1,6 +1,6 @@
 const express = require('express');
 const redisClient = require('../models/redisClient');
-const { getAllKeys, getAllData, getAllGame, getValue, deleteKey, newRoomCode, getPeople } = require('./util');
+const { getAllKeys, getWaitGame, getAllGame, getAllData, getValue, deleteKey, newRoomCode, getPeople } = require('./util');
 
 let router = express.Router();
 
@@ -21,11 +21,13 @@ router.post('/', async (req, res, next) => {
 });
 
 router.get('/join/rand', async (req, res, next) => {
-    let roomList = await getAllKeys();
-    let allow = false;
-    //while(allow === false) {
-        redisClient.sort();
-    //}
+    let waitList = [];
+    let num = 5;
+    while(!waitList[0]) {
+        waitList = await getWaitGame('people', num);
+        num--;
+    }
+    res.json(waitList[0]);
 });
 
 router.get('/join/:code', async (req, res, next) => {
