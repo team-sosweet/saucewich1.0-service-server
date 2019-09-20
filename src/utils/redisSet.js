@@ -11,17 +11,17 @@ exports.getPort = function (key) {
             }
         })
     }))
-}
+};
 
 // 게임 특정 대기 port 삭제
-exports.popPort = function(key, port) {
+exports.popPort = function(key) {
     return new Promise((resolve, reject)=>{
-        redisClient.srem(key, port, (err, set)=>{
+        redisClient.spop(key, (err, port)=>{
             if(err) {
                 reject(err);
             } else {
-                resolve(set);
+                resolve(port);
             }
         })
     })
-}
+};
