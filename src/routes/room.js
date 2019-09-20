@@ -1,6 +1,7 @@
 const express = require('express');
 const redisClient = require('../models/redisClient');
 const { getWaitGame, getAllGame, getAllData, changePeople, newRoomCode, getPeople } = require('./util');
+const { getPort, popPort } = require('../utils/redisSet');
 
 let router = express.Router();
 
@@ -76,9 +77,25 @@ router.put('/exit/:code', async (req, res, next) => {
     }
 });
 
+router.post('/port', async (req, res, next)=>{
+   let port = req.body.port;
+   await redisClient.sadd('port', port);
+   res.status(201).json({success: true});
+});
+
+router.get('/ports', async (req, res, next)=>{
+    let ports = await getPort('port');
+    res.json({ports: ports});
+})
+
 router.get('/keys', async (req, res, next)=>{
     let roomList = await getAllData('people');
     res.json(roomList);
 });
+
+router.delete('/port/:port', async (req, res, next)=>{
+    let result = await popPort('port', req.params.port);
+    res.json(result);
+})
 
 module.exports = router;
