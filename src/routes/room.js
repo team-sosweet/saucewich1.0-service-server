@@ -1,6 +1,7 @@
 const express = require('express');
 const redisClient = require('../models/redisClient');
-const { getWaitGame, getAllGame, getAllData, changePeople, newRoomCode, getPeople } = require('./util');
+const { newRoomCode } = require('../utils/util');
+const { getPeople, getWaitGame, getAllGame, getAllData, changePeople, } = require('../utils/redisSortSet');
 const { getPort, popPort } = require('../utils/redisSet');
 
 let router = express.Router();
@@ -88,7 +89,7 @@ router.get('/ports', async (req, res, next)=>{
     res.json({ports: ports});
 })
 
-router.get('/keys', async (req, res, next)=>{
+router.get('/rooms', async (req, res, next)=>{
     let roomList = await getAllData('people');
     res.json(roomList);
 });
