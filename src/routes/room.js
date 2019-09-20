@@ -1,6 +1,6 @@
 const express = require('express');
 const redisClient = require('../models/redisClient');
-const { newRoomCode } = require('../utils/util');
+const { newRoomCode, requestProcess } = require('../utils/util');
 const { getPeople, getWaitGame, getAllGame, getAllData, changePeople, } = require('../utils/redisSortSet');
 const { getPort, popPort } = require('../utils/redisSet');
 const { getValue, searchByValue, getAll } = require('../utils/redisHash');
@@ -57,6 +57,7 @@ router.get('/join/rand', async (req, res, next) => {
         }
         const port = await popPort('port');
         if(port === null) {
+            await requestProcess();
             res.json({success: false});
         } else {
             await redisClient.zadd("people", 0, roomCode);
