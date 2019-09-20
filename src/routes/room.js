@@ -55,11 +55,11 @@ router.get('/join/rand', async (req, res, next) => {
                 allow = true;
             }
         }
-        await redisClient.zadd("people", 0, roomCode);
         const port = await popPort('port');
         if(port === null) {
             res.json({success: false});
         } else {
+            await redisClient.zadd("people", 0, roomCode);
             await redisClient.hset('ports', roomCode, port);
             res.json({roomCode:roomCode});
         }
