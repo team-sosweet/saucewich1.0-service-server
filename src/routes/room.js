@@ -3,9 +3,11 @@ const redisClient = require('../models/redisClient');
 const { newRoomCode } = require('../utils/util');
 const { getPeople, getWaitGame, getAllGame, getAllData, changePeople, } = require('../utils/redisSortSet');
 const { getPort, popPort } = require('../utils/redisSet');
+const { getValue } = require('../utils/redisHash');
 
 let router = express.Router();
 
+// deprecated , join API 에서 방이 없다면 방 생성함.
 router.post('/', async (req, res, next) => {
     let roomList = await getAllGame('people');
     let allow = false;
@@ -18,9 +20,15 @@ router.post('/', async (req, res, next) => {
         }
     }
     await redisClient.zadd("people", 0, roomCode);
-    //await redisClient.sadd(roomCode, port);
-    let result = await getPeople('people', roomCode);
-    if(result) res.json({roomCode:roomCode, people:result[0][0]});
+    const port = await popPort('port');
+    if(port === null) {
+        res.json({success: false});
+    } else {
+        await redisClient.hset('ports', roomCode, port);
+        const result = await getValue('ports', roomCode);
+        let people = await getPeople('people', roomCode);
+        if(people) res.json({roomCode:roomCode, people:people[0][0], port: result.toString()});
+    }
 });
 
 router.get('/join/rand', async (req, res, next) => {
@@ -43,17 +51,23 @@ router.get('/join/:code', async (req, res, next) => {
     } else {
         let people = await getPeople('people', roomCode);
         people = Number(people[1][1]) +1;
-        if(people >= 6) {
-            let err = new Error('room is full');
-            err.status = 403;
-            next(err);
+        let port = await getValue('ports', roomCode);
+        if(port === null) {
+            res.json({success: false});
         } else {
-            await changePeople('people', roomCode, 1);
-            res.status(200).json({
-                success: true,
-                roomCode: roomCode,
-                people: people,
-            });
+            if(people >= 6) {
+                let err = new Error('room is full');
+                err.status = 403;
+                next(err);
+            } else {
+                await changePeople('people', roomCode, 1);
+                res.status(200).json({
+                    success: true,
+                    roomCode: roomCode,
+                    people: people,
+                    port: port,
+                });
+            }
         }
     }
 });
