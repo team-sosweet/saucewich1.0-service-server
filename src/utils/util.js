@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const request = require('request');
 
 exports.newRoomCode = function (length) {
     let result = '';
@@ -54,4 +55,16 @@ exports.addPlaytime = function (source, target) {
         hour ++;
     }
     return hour.toString() + ':' + minute.toString() + ':' + second.toString();
+};
+
+exports.requestProcess = function () {
+    return new Promise(((resolve, reject) => {
+        request.get(process.env.PROCESS_SERVER, (err, response, body)=>{
+            if(err) {
+                reject(err);
+            } else {
+                resolve(body);
+            }
+        })
+    }))
 };
