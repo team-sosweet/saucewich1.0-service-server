@@ -1,6 +1,6 @@
 const experss = require('express');
 const User = require('../models').User;
-const {maxExp, checkJWT, addPlaytime} = require('./util');
+const {maxExp, checkJWT, addPlaytime} = require('../utils/util');
 
 const router = experss.Router();
 
