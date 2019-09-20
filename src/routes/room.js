@@ -3,7 +3,8 @@ const redisClient = require('../models/redisClient');
 const { newRoomCode } = require('../utils/util');
 const { getPeople, getWaitGame, getAllGame, getAllData, changePeople, } = require('../utils/redisSortSet');
 const { getPort, popPort } = require('../utils/redisSet');
-const { getValue } = require('../utils/redisHash');
+const { getValue, searchByValue, getAll } = require('../utils/redisHash');
+const { deleteKey } = require('../utils/redisKey');
 
 let router = express.Router();
 
@@ -34,11 +35,37 @@ router.post('/', async (req, res, next) => {
 router.get('/join/rand', async (req, res, next) => {
     let waitList = [];
     let num = 5;
+    let flag = false;
     while(!waitList[0]) {
         waitList = await getWaitGame('people', num);
         num--;
+        if(num === -1) {
+            flag = true;
+            break;
+        }
     }
-    res.json({roomCode: waitList[0]});
+    if(flag) {
+        let roomList = await getAllGame('people');
+        let allow = false;
+        let roomCode = '';
+        while(allow === false) {
+            roomCode = newRoomCode(3);
+            console.log(roomList);
+            if((roomList.indexOf(roomCode)) === -1) {
+                allow = true;
+            }
+        }
+        await redisClient.zadd("people", 0, roomCode);
+        const port = await popPort('port');
+        if(port === null) {
+            res.json({success: false});
+        } else {
+            await redisClient.hset('ports', roomCode, port);
+            res.json({roomCode:roomCode});
+        }
+    } else {
+        res.json({roomCode: waitList[0]});
+    }
 });
 
 router.get('/join/:code', async (req, res, next) => {
@@ -112,6 +139,22 @@ router.get('/rooms', async (req, res, next)=>{
 router.delete('/port', async (req, res, next)=>{
     let result = await popPort('port');
     res.json(result);
+});
+
+router.post('/crash', async (req, res, next)=>{
+    let port = req.body.port;
+    let search = await searchByValue('ports', port);
+    if(search) res.json(search);
+});
+
+router.delete('/key/:key', async (req, res, next)=>{
+   let result = await deleteKey(req.params.key);
+   res.json(result);
+});
+
+router.get('/roomAndPort/:key', async (req, res, next)=>{
+   let result = await getAll(req.params.key);
+   res.json(result);
 });
 
 module.exports = router;
