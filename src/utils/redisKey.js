@@ -24,3 +24,15 @@ exports.deleteKey = function(key) {
         })
     }))
 };
+
+exports.getKeyValue = function (key) {
+    return new Promise(((resolve, reject) => {
+        redisClient.get(key, (err, data)=>{
+            if(err) {
+                reject(err);
+            } else {
+                resolve(data);
+            }
+        })
+    }))
+};
