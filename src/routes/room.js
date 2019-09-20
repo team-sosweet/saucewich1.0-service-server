@@ -18,6 +18,7 @@ router.post('/', async (req, res, next) => {
         }
     }
     await redisClient.zadd("people", 0, roomCode);
+    //await redisClient.sadd(roomCode, port);
     let result = await getPeople('people', roomCode);
     if(result) res.json({roomCode:roomCode, people:result[0][0]});
 });
@@ -87,16 +88,16 @@ router.post('/port', async (req, res, next)=>{
 router.get('/ports', async (req, res, next)=>{
     let ports = await getPort('port');
     res.json({ports: ports});
-})
+});
 
 router.get('/rooms', async (req, res, next)=>{
     let roomList = await getAllData('people');
     res.json(roomList);
 });
 
-router.delete('/port/:port', async (req, res, next)=>{
-    let result = await popPort('port', req.params.port);
+router.delete('/port', async (req, res, next)=>{
+    let result = await popPort('port');
     res.json(result);
-})
+});
 
 module.exports = router;
