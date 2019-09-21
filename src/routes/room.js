@@ -143,4 +143,9 @@ router.get('/roomAndPort/:key', async (req, res, next)=>{
    res.json(result);
 });
 
+router.get('/game/:port', async (req, res, next)=>{
+   let port = await getWaitGame('games', req.params.port);
+   res.json({roomCode: port[0]});
+});
+
 module.exports = router;
