@@ -1,9 +1,8 @@
 const express = require('express');
 const redisClient = require('../models/redisClient');
 const { newRoomCode, requestProcess } = require('../utils/util');
-const { getPeople, getWaitGame, getAllGame, getAllData, changePeople, } = require('../utils/redisSortSet');
+const { getPeople, getWaitGame, getAllGame, getAllData, deleteGame } = require('../utils/redisSortSet');
 const { getPort, popPort } = require('../utils/redisSet');
-const { getValue, searchByValue, getAll } = require('../utils/redisHash');
 const { deleteKey } = require('../utils/redisKey');
 
 let router = express.Router();
@@ -127,10 +126,18 @@ router.delete('/port', async (req, res, next)=>{
     res.json(result);
 });
 
-router.post('/crash', async (req, res, next)=>{
-    //let port = req.body.port;
-    //let search = await searchByValue('ports', port);
-    //if(search) res.json(search);
+router.get('/crash/:port', async (req, res, next)=>{
+    let port = req.params.port;
+    let roomCode = await getWaitGame('games', port);
+    if(!roomCode.length) {
+        let err = new Error('Cannot found Game by port');
+        err.status = 406;
+        next(err);
+    } else {
+        await deleteGame('games', roomCode);
+        await deleteGame('people', roomCode);
+        res.json({success: true});
+    }
 });
 
 router.delete('/key/:key', async (req, res, next)=>{
@@ -144,8 +151,8 @@ router.get('/roomAndPort/:key', async (req, res, next)=>{
 });
 
 router.get('/game/:port', async (req, res, next)=>{
-   let port = await getWaitGame('games', req.params.port);
-   res.json({roomCode: port[0]});
+   let roomCode = await getWaitGame('games', req.params.port);
+   res.json({roomCode: roomCode[0]});
 });
 
 module.exports = router;
