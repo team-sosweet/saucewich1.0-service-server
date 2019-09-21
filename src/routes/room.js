@@ -78,7 +78,7 @@ router.get('/join/:code', async (req, res, next) => {
         next(err);
     } else {
         let people = await getPeople('people', roomCode);
-        people = Number(people[1][1]) +1;
+        // people = Number(people[1][1]) +1;
         let port = await getValue('ports', roomCode);
         if(port === null) {
             res.json({success: false});
@@ -88,11 +88,11 @@ router.get('/join/:code', async (req, res, next) => {
                 err.status = 403;
                 next(err);
             } else {
-                await changePeople('people', roomCode, 1);
+                //await changePeople('people', roomCode, 1);
                 res.status(200).json({
                     success: true,
                     roomCode: roomCode,
-                    people: people,
+                    people: people[1][1],
                     port: port,
                 });
             }
@@ -100,7 +100,7 @@ router.get('/join/:code', async (req, res, next) => {
     }
 });
 
-router.put('/exit/:code', async (req, res, next) => {
+router.put('/people/:code', async (req, res, next) => {
    let roomList = await getAllGame('people');
    let roomCode = req.params.code;
     if((roomList.indexOf(roomCode)) === -1) {
@@ -108,17 +108,25 @@ router.put('/exit/:code', async (req, res, next) => {
         err.status = 406;
         next(err);
     }
-    let people = await getPeople('people', roomCode);
-    people = Number(people[1][1]) - 1;
-    if(people < 0) {
-        let err = new Error('cannot exit room');
+    // let people = await getPeople('people', roomCode);
+    // people = Number(people[1][1]) - 1;
+    let people = req.body.people;
+    if(people) {
+        console.log(people);
+        await redisClient.zadd("people", people, roomCode);
+        //await changePeople('people', roomCode, -1);
+        res.status(200).json({success: true});
+    } else {
+        let err = new Error('Not Found Room');
         err.status = 403;
         next(err);
-    } else {
-        console.log(people);
-        await changePeople('people', roomCode, -1);
-        res.status(200).json({success: true});
     }
+});
+
+router.get('/people/:code', async (req, res, next)=>{
+   let people =  await getPeople('people', roomCode);
+   people = people[1][1];
+   res.json({people: people});
 });
 
 router.post('/port', async (req, res, next)=>{
