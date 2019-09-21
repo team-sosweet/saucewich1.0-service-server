@@ -26,7 +26,7 @@ exports.getAllGame = function(key) {
     })
 };
 
-// 특정 게임의 참가 인원 반환
+// 특정 게임의 참가 인원 반환 / 특정 게임의 포트 반환
 exports.getPeople = function (key, roomCode) {
     return new Promise((resolve, reject) => {
         redisClient.zscan(key, 0, 'MATCH', roomCode, (err, data) => {
