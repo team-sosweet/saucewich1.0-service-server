@@ -62,3 +62,15 @@ exports.getWaitGame = function (key, people) {
         })
     })
 };
+
+exports.deleteGame = function (key, field) {
+  return new Promise(((resolve, reject) => {
+      redisClient.zrem(key, field, (err, data)=>{
+          if (err) {
+              reject(err);
+          } else {
+              resolve(data);
+          }
+      })
+  }))
+};
