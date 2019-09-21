@@ -14,7 +14,7 @@ router.get('/join/rand', async (req, res, next) => {
     while(!waitList[0]) {
         waitList = await getWaitGame('people', num);
         num--;
-        if(num === -1) {
+        if(num === -2) {
             flag = true;
             break;
         }
