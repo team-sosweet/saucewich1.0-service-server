@@ -8,30 +8,6 @@ const { deleteKey } = require('../utils/redisKey');
 
 let router = express.Router();
 
-// deprecated , join API 에서 방이 없다면 방 생성함.
-router.post('/', async (req, res, next) => {
-    let roomList = await getAllGame('people');
-    let allow = false;
-    let roomCode = '';
-    while(allow === false) {
-        roomCode = newRoomCode(3);
-        console.log(roomList);
-        if((roomList.indexOf(roomCode)) === -1) {
-            allow = true;
-        }
-    }
-    await redisClient.zadd("people", 0, roomCode);
-    const port = await popPort('port');
-    if(port === null) {
-        res.json({success: false});
-    } else {
-        await redisClient.hset('ports', roomCode, port);
-        const result = await getValue('ports', roomCode);
-        let people = await getPeople('people', roomCode);
-        if(people) res.json({roomCode:roomCode, people:people[0][0], port: result.toString()});
-    }
-});
-
 router.get('/join/rand', async (req, res, next) => {
     let waitList = [];
     let num = 5;
@@ -55,13 +31,14 @@ router.get('/join/rand', async (req, res, next) => {
                 allow = true;
             }
         }
-        const port = await popPort('port');
+        const port = await popPort('ports');
         if(port === null) {
             await requestProcess();
             res.json({success: false});
         } else {
             await redisClient.zadd("people", 0, roomCode);
-            await redisClient.hset('ports', roomCode, port);
+            await redisClient.zadd("games", port, roomCode);
+            //await redisClient.hset('ports', roomCode, port);
             res.json({roomCode:roomCode});
         }
     } else {
@@ -79,7 +56,7 @@ router.get('/join/:code', async (req, res, next) => {
     } else {
         let people = await getPeople('people', roomCode);
         // people = Number(people[1][1]) +1;
-        let port = await getValue('ports', roomCode);
+        let port = await getPeople('games', roomCode);
         if(port === null) {
             res.json({success: false});
         } else {
@@ -93,7 +70,7 @@ router.get('/join/:code', async (req, res, next) => {
                     success: true,
                     roomCode: roomCode,
                     people: people[1][1],
-                    port: port,
+                    port: port[1][1],
                 });
             }
         }
@@ -131,12 +108,12 @@ router.get('/people/:code', async (req, res, next)=>{
 
 router.post('/port', async (req, res, next)=>{
    let port = req.body.port;
-   await redisClient.sadd('port', port);
+   await redisClient.sadd('ports', port);
    res.status(201).json({success: true});
 });
 
 router.get('/ports', async (req, res, next)=>{
-    let ports = await getPort('port');
+    let ports = await getPort('ports');
     res.json({ports: ports});
 });
 
@@ -146,14 +123,14 @@ router.get('/rooms', async (req, res, next)=>{
 });
 
 router.delete('/port', async (req, res, next)=>{
-    let result = await popPort('port');
+    let result = await popPort('ports');
     res.json(result);
 });
 
 router.post('/crash', async (req, res, next)=>{
-    let port = req.body.port;
-    let search = await searchByValue('ports', port);
-    if(search) res.json(search);
+    //let port = req.body.port;
+    //let search = await searchByValue('ports', port);
+    //if(search) res.json(search);
 });
 
 router.delete('/key/:key', async (req, res, next)=>{
@@ -162,7 +139,7 @@ router.delete('/key/:key', async (req, res, next)=>{
 });
 
 router.get('/roomAndPort/:key', async (req, res, next)=>{
-   let result = await getAll(req.params.key);
+   let result = await getAllData(req.params.key);
    res.json(result);
 });
 
