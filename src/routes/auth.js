@@ -6,24 +6,30 @@ const User = require('../models').User;
 const router = express.Router();
 
 router.post('/sign_up', (req, res, next) => {
-    let body = req.body;
-    crypto.randomBytes(64, (err, salt) => {
-        crypto.pbkdf2(body.password, salt.toString('base64'), 10000, 64, 'sha512', async function (err, key) {
-            try {
-                let user = await User.create({
-                    id: body.id,
-                    password: key.toString('base64'),
-                    salt: salt.toString('base64'),
-                });
+    if(!req.body.id || !req.body.password) {
+        let err = new Error('Empty id or password!');
+        err.status = 406;
+        next(err);
+    } else {
+        let body = req.body;
+        crypto.randomBytes(64, (err, salt) => {
+            crypto.pbkdf2(body.password, salt.toString('base64'), 10000, 64, 'sha512', async function (err, key) {
+                try {
+                    let user = await User.create({
+                        id: body.id,
+                        password: key.toString('base64'),
+                        salt: salt.toString('base64'),
+                    });
 
-                if (user) res.json({success: true, message: "sign up success."});
-            } catch (error) {
-                let err = new Error('Conflict : User already exist.');
-                err.status = 409;
-                next(err);
-            }
-        })
-    });
+                    if (user) res.json({success: true, message: "sign up success."});
+                } catch (error) {
+                    let err = new Error('Conflict : User already exist.');
+                    err.status = 409;
+                    next(err);
+                }
+            })
+        });
+    }
 });
 
 router.post('/sign_in', async (req, res, next) => {
