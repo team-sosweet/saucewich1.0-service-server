@@ -34,48 +34,54 @@ router.post('/sign_up', (req, res, next) => {
 
 router.post('/sign_in', async (req, res, next) => {
     let body = req.body;
-    try {
-        const user = await User.findOne({
-            where: {id: body.id}
-        });
-        crypto.pbkdf2(body.password, user.salt, 10000, 64, 'sha512', async (err, key) => {
-            if (user.password === key.toString('base64')) {
-                const AccessToken = jwt.sign({id: user.id, type: 'access'}, process.env.JWT_SECRET, {expiresIn: '12h'});
-                const RefreshToken = jwt.sign({id: user.id, type: 'refresh'}, process.env.JWT_SECRET, {expiresIn: '14 days'});
-
-                await User.update({refreshToken: RefreshToken}, {where: {id: user.id}});
-
-                let KD = (Number(user.kill) / Number(user.death));
-                let WL = (Number(user.win) / Number(user.lose));
-
-                if (isNaN(KD))
-                    KD = 0;
-                if (isNaN(WL))
-                    WL = 0;
-
-                res.status(201).json({
-                    success: true,
-                    user: {
-                        id: user.id,
-                        level: user.level,
-                        exp: user.exp,
-                        playtime: user.playtime,
-                        KD: KD.toFixed(2),
-                        WL: WL.toFixed(2),
-                    },
-                    AccessToken: AccessToken,
-                    RefreshToken: RefreshToken,
-                });
-            } else {
-                let err = new Error('Invalid id or password');
-                err.status = 401;
-                next(err);
-            }
-        });
-    } catch (error) {
-        let err = new Error('Invalid id or password');
-        err.status = 401;
+    if(!body.id || !body.password) {
+        let err = new Error('Empty id or password!');
+        err.status = 406;
         next(err);
+    } else {
+        try {
+            const user = await User.findOne({
+                where: {id: body.id}
+            });
+            crypto.pbkdf2(body.password, user.salt, 10000, 64, 'sha512', async (err, key) => {
+                if (user.password === key.toString('base64')) {
+                    const AccessToken = jwt.sign({id: user.id, type: 'access'}, process.env.JWT_SECRET, {expiresIn: '12h'});
+                    const RefreshToken = jwt.sign({id: user.id, type: 'refresh'}, process.env.JWT_SECRET, {expiresIn: '14 days'});
+
+                    await User.update({refreshToken: RefreshToken}, {where: {id: user.id}});
+
+                    let KD = (Number(user.kill) / Number(user.death));
+                    let WL = (Number(user.win) / Number(user.lose));
+
+                    if (isNaN(KD))
+                        KD = 0;
+                    if (isNaN(WL))
+                        WL = 0;
+
+                    res.status(201).json({
+                        success: true,
+                        user: {
+                            id: user.id,
+                            level: user.level,
+                            exp: user.exp,
+                            playtime: user.playtime,
+                            KD: KD.toFixed(2),
+                            WL: WL.toFixed(2),
+                        },
+                        AccessToken: AccessToken,
+                        RefreshToken: RefreshToken,
+                    });
+                } else {
+                    let err = new Error('Invalid id or password');
+                    err.status = 401;
+                    next(err);
+                }
+            });
+        } catch (error) {
+            let err = new Error('Invalid id or password');
+            err.status = 401;
+            next(err);
+        }
     }
 });
 
